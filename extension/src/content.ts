@@ -3,6 +3,7 @@ import { copyToClipboard, createElementByText, isEmptyString } from "./util"
 import { ScriptId, ScriptType } from "./type"
 import axios from "axios"
 import "./assets/scss/content.scss"
+import * as JsBarcode from "jsbarcode"
 
 chrome.runtime.onMessage.addListener(function (message: ScriptType, sender, sendResponse) {
   switch (message.id) {
@@ -167,6 +168,7 @@ function handleCopyCodeToClipboard() {
 }
 
 const host = window.location.host
+const href = window.location.href
 
 function checkHost(host: string): boolean {
   for (const enableHost of enableHostClipboardFeature) {
@@ -186,4 +188,25 @@ function checkHost(host: string): boolean {
 
 if (checkHost(host)) {
   handleCopyCodeToClipboard()
+}
+
+const replaceBarcodeImage = () => {
+  const sectionBarcode = Object.values(document.querySelectorAll(".bill-col-5"))?.[1]
+  const barcodeImage: any = sectionBarcode?.childNodes?.[1]
+  barcodeImage.style.display = "none"
+  barcodeImage.replaceWith(
+    createElementByText(`
+    <div id="barcode-section">
+      <image id="barcode"></image>
+    </div>
+  `),
+  )
+  const code = sectionBarcode?.textContent?.trim() ?? ""
+  JsBarcode("#barcode", code, { format: "CODE128", displayValue: false, width: 2 })
+  // .blank(20) // Create space between the barcodes
+  // debugger
+}
+
+if (href?.includes("http://customer.dpaexpress.vn/mde/print.html")) {
+  replaceBarcodeImage()
 }
